@@ -8,16 +8,16 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@Table(name = "craft_creator" ,schema = "public")
-public class CraftCreator {
+@Table(name = "admin" ,schema = "public")
+public class Admin {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long creatorId;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private long adminId;
 
-    private String creatorName;
+    private String username;
 
-    private String creatorEmail;
+    private String email;
 
     @OneToOne
     @JoinColumn(name = "user_id",referencedColumnName = "id",nullable = false)

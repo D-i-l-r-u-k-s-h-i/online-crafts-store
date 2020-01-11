@@ -23,6 +23,6 @@ public class Customer {
     private String deleveryAdress;
 
     @OneToOne
-    @JoinColumn(name = "u_id",nullable = false)
-    private AllUsers allUsers;
+    @JoinColumn(name = "user_id",referencedColumnName = "id",nullable = false)
+    private AllUsers user;
 }

@@ -1,5 +1,6 @@
 package lk.apiit.eea1.online_crafts_store.Auth.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +14,7 @@ public class AllUsers {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long userId;
+    private long id;
 
     private String username;
 
@@ -23,4 +24,15 @@ public class AllUsers {
     @JoinColumn(name = "role_id",nullable = false)
     private Role role;
 
+    @JsonIgnore
+    @OneToOne(cascade =  CascadeType.ALL, mappedBy = "user")
+    private Customer customer;
+
+    @JsonIgnore
+    @OneToOne(cascade =  CascadeType.ALL, mappedBy = "user")
+    private Admin admin;
+
+    @JsonIgnore
+    @OneToOne(cascade =  CascadeType.ALL, mappedBy = "user")
+    private CraftCreator craftCreator;
 }
