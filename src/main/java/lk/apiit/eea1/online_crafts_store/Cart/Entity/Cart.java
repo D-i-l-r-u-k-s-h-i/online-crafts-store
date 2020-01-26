@@ -1,5 +1,7 @@
 package lk.apiit.eea1.online_crafts_store.Cart.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lk.apiit.eea1.online_crafts_store.Auth.Entity.AllUsers;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.Customer;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +17,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long cartId;
 
-    @ManyToOne
-    @JoinColumn(name = "cust_id",nullable = false)
-    private Customer customer;
+    @OneToOne
+    @JoinColumn(name = "user_id",referencedColumnName = "id",nullable = false)
+    private AllUsers user;
 }

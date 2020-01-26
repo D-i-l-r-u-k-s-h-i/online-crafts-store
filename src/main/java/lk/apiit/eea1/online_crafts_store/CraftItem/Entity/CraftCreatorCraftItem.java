@@ -14,7 +14,7 @@ public class CraftCreatorCraftItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long Id;
+    private long id;
 
     @ManyToOne
     @JoinColumn(name = "creator_id",nullable = false)

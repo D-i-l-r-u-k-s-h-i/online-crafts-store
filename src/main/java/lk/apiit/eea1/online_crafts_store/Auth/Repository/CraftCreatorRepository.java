@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CraftCreatorRepository extends JpaRepository<CraftCreator,Long> {
     CraftCreator findByCreatorEmail(String email);
+
+    CraftCreator findByUser_Id(long id);
 }

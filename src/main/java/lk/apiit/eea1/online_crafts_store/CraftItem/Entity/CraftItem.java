@@ -20,12 +20,20 @@ public class CraftItem {
 
     private double ciPrice;
 
-    private double overallRating;
+//    @Lob
+//    private byte[] img;
+
+    //for now using URL
+    private String img;
 
     private int itemQuantity;
 
     private String shortDescription;
 
     private String longDescription;
+
+    private String category;
+
+    private String type; //ready made or craft kit
 
 }

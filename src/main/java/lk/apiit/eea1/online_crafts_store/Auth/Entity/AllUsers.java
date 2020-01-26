@@ -1,6 +1,7 @@
 package lk.apiit.eea1.online_crafts_store.Auth.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lk.apiit.eea1.online_crafts_store.Cart.Entity.Cart;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -35,4 +36,8 @@ public class AllUsers {
     @JsonIgnore
     @OneToOne(cascade =  CascadeType.ALL, mappedBy = "user")
     private CraftCreator craftCreator;
+
+    @JsonIgnore
+    @OneToOne(cascade =  CascadeType.ALL, mappedBy = "user")
+    private Cart cart;
 }

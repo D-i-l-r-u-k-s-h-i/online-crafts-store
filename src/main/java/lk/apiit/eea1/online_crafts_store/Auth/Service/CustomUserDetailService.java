@@ -7,6 +7,8 @@ import lk.apiit.eea1.online_crafts_store.Auth.Repository.CraftCreatorRepository;
 import lk.apiit.eea1.online_crafts_store.Auth.Repository.CustomerRepository;
 import lk.apiit.eea1.online_crafts_store.Auth.Repository.UserRepository;
 import lk.apiit.eea1.online_crafts_store.Auth.UserSession;
+import lk.apiit.eea1.online_crafts_store.Cart.Entity.Cart;
+import lk.apiit.eea1.online_crafts_store.Cart.Repository.CartRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -33,6 +35,9 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Autowired
     AdminRepository adminRepository;
+
+    @Autowired
+    CartRepository cartRepository;
 
     @Override
     @Transactional
@@ -83,6 +88,10 @@ public class CustomUserDetailService implements UserDetailsService {
 
                     userRepository.save(newuser);
                     customerRepository.save(newCust);
+                    //create cart for the user
+                    Cart cart=new Cart();
+                    cart.setUser(newuser);
+                    cartRepository.save(cart);
                 }
                 else if(userDTO.getUserType().equals("CREATOR")){
                     CraftCreator creator_by_email=craftCreatorRepository.findByCreatorEmail(userDTO.getEmail());
@@ -99,6 +108,11 @@ public class CustomUserDetailService implements UserDetailsService {
 
                     userRepository.save(newuser);
                     craftCreatorRepository.save(craftCreator);
+
+                    //create cart for the user
+                    Cart cart=new Cart();
+                    cart.setUser(newuser);
+                    cartRepository.save(cart);
                 }
 
                 ret="Successful registration";
