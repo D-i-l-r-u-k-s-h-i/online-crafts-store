@@ -62,4 +62,10 @@ public class OrderController {
         return ResponseEntity.ok(orderService.calculateOrderTotForDisplay());
     }
 
+    @RequestMapping(value = "/pastOrders",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> pastOrdersOfUser(@RequestHeader(value = "Authorization") String token) throws Exception {
+        Utils.checkToken(token);
+        return ResponseEntity.ok(orderService.pastOrdersOfUser());
+    }
+
 }

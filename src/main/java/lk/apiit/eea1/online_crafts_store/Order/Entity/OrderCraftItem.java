@@ -3,6 +3,8 @@ package lk.apiit.eea1.online_crafts_store.Order.Entity;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftItem;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
@@ -24,4 +26,6 @@ public class OrderCraftItem {
     private CraftItem craftItem;
 
     private int quantity;
+
+    private String status;
 }

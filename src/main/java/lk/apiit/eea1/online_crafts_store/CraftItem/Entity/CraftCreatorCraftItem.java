@@ -3,6 +3,8 @@ package lk.apiit.eea1.online_crafts_store.CraftItem.Entity;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.CraftCreator;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 

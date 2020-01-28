@@ -4,11 +4,15 @@ import lk.apiit.eea1.online_crafts_store.Auth.Entity.CraftCreator;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.RoleName;
 import lk.apiit.eea1.online_crafts_store.Auth.Repository.CraftCreatorRepository;
 import lk.apiit.eea1.online_crafts_store.Auth.UserSession;
+import lk.apiit.eea1.online_crafts_store.Cart.Entity.Cart;
+import lk.apiit.eea1.online_crafts_store.CraftItem.DTO.CreatorCraftOrderDTO;
 import lk.apiit.eea1.online_crafts_store.CraftItem.DTO.ItemDTO;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftCreatorCraftItem;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftItem;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Repository.CraftCreatorItemRepository;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Repository.CraftItemRepository;
+import lk.apiit.eea1.online_crafts_store.Order.Entity.OrderCraftItem;
+import lk.apiit.eea1.online_crafts_store.Order.Repository.OrderCraftItemRepository;
 import lk.apiit.eea1.online_crafts_store.Util.Utils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +36,9 @@ public class CraftItemService {
 
     @Autowired
     CraftCreatorRepository craftCreatorRepository;
+
+    @Autowired
+    OrderCraftItemRepository orderCraftItemRepository;
 
     //only for admins and craft creators
     @Transactional    //because craft item and images should be saved at the same time, rollback if there is any problem
@@ -64,12 +71,47 @@ public class CraftItemService {
 
     public void deleteItem(long id){
         CraftItem craftItem=craftItemRepository.findByCraftId(id);
+
+        CraftCreatorCraftItem craftCreatorCraftItem=craftCreatorItemRepository.findByCraftItem_CraftId(id);
+
+        craftCreatorItemRepository.delete(craftCreatorCraftItem);
         craftItemRepository.delete(craftItem);
     }
 
     //only for admins and craft creators
-    public void updateItem(){
+    public void updateItem(ItemDTO itemDTO){
         //try model mapper and test it first or do the other way
+        CraftItem craftItem=craftItemRepository.findByCraftId(itemDTO.getCraftId());
+
+        if(itemDTO.getCategory()!=null){
+            craftItem.setCategory(itemDTO.getCategory());
+        }
+
+        if(itemDTO.getCiName()!=null){
+            craftItem.setCiName(itemDTO.getCiName());
+        }
+
+        if(itemDTO.getCiPrice()!=0){
+            craftItem.setCiPrice(itemDTO.getCiPrice());
+        }
+
+        if(itemDTO.getItemQuantity()!=0){
+            craftItem.setItemQuantity(itemDTO.getItemQuantity());
+        }
+
+        if(itemDTO.getLongDescription()!=null){
+            craftItem.setLongDescription(itemDTO.getLongDescription());
+        }
+
+        if(itemDTO.getShortDescription()!=null){
+            craftItem.setShortDescription(itemDTO.getShortDescription());
+        }
+
+        if(itemDTO.getImg()!=null){
+            craftItem.setImg(itemDTO.getImg());
+        }
+            //if availabilityStatus is false, then set the quantity to 0
+        craftItemRepository.save(craftItem);
     }
 
     public List<ItemDTO> getAllItems(){
@@ -101,7 +143,7 @@ public class CraftItemService {
         return dtoList;
     }
 
-    public List<ItemDTO> getAllItemsOfCraftCreator(long id){ //id or userName?
+    public List<ItemDTO> getAllItemsOfCraftCreator(long id,int page){ //id or userName?
         List<ItemDTO> dtoList=new ArrayList<>();
         List<CraftCreatorCraftItem> creatorCraftItems;
         //for craft creators dashboard
@@ -109,10 +151,10 @@ public class CraftItemService {
             UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             CraftCreator craftCreator=craftCreatorRepository.findByUser_Id(userSession.getId());
 
-            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(craftCreator.getCreatorId());
+            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(craftCreator.getCreatorId(),PageRequest.of(page,12));
         } //for other users
         else{
-            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(id);
+            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(id,PageRequest.of(page,12));
         }
 
         for (CraftCreatorCraftItem cci:creatorCraftItems) {
@@ -123,6 +165,41 @@ public class CraftItemService {
         }
 
         return dtoList;
+    }
+
+    public List<CreatorCraftOrderDTO> getOrdersForCreator(){
+        List<CreatorCraftOrderDTO> craftOrderDTOList=new ArrayList<>();
+        UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CraftCreator craftCreator=craftCreatorRepository.findByUser_Id(userSession.getId());
+
+        List<CraftCreatorCraftItem> creatorCraftItems=craftCreatorItemRepository.getAllByCraftCreator(craftCreator);
+
+        for (CraftCreatorCraftItem ccci:creatorCraftItems) {
+            OrderCraftItem orderCraftItem=orderCraftItemRepository.getByOrder_OrderStatusAndCraftItemAndStatus("PURCHASED",ccci.getCraftItem(),"DELIVERY PENDING");
+
+            if(orderCraftItem!=null){
+                Cart cart=orderCraftItem.getOrder().getCart();
+
+                CreatorCraftOrderDTO dto=new CreatorCraftOrderDTO();
+                dto.setOrderCraftItemId(orderCraftItem.getId());
+                dto.setCraftName(ccci.getCraftItem().getCiName());
+                dto.setQuantity(orderCraftItem.getQuantity());
+                dto.setOrderTotal(orderCraftItem.getOrder().getOrderTotal());
+                dto.setUsername(cart.getUser().getUsername());
+                dto.setPurchaseDate(orderCraftItem.getOrder().getPurchasedDate());
+
+                craftOrderDTOList.add((dto));
+            }
+
+        }
+
+        return craftOrderDTOList;
+    }
+
+    public void changeItemDeliveryStatus(long id){
+        OrderCraftItem orderCraftItem=orderCraftItemRepository.getById(id);
+        orderCraftItem.setStatus("DELIVERED");
+        orderCraftItemRepository.save(orderCraftItem);
     }
 
     public List<ItemDTO> searchCrafts(String name){
@@ -169,4 +246,6 @@ public class CraftItemService {
 
         return mapper.map(craftItem,ItemDTO.class);
     }
+
+
 }

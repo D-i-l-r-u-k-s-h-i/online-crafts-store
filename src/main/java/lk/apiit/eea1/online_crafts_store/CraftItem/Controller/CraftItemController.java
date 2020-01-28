@@ -35,10 +35,10 @@ public class CraftItemController {
         return ResponseEntity.ok(craftItemService.getRecentlyAddedItems());
     }
 
-    @RequestMapping(value = "/creator/{id}",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCraftItemsOfCreator(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "id") long id) throws Exception {
+    @RequestMapping(value = "/creator/{id}/{page}",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getCraftItemsOfCreator(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "id") long id,@PathVariable(name = "page") int page) throws Exception {
         Utils.checkToken(token);
-        return ResponseEntity.ok(craftItemService.getAllItemsOfCraftCreator(id));
+        return ResponseEntity.ok(craftItemService.getAllItemsOfCraftCreator(id,page));
     }
 
     @RequestMapping(value = "/search/{value}",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -57,5 +57,32 @@ public class CraftItemController {
     public ResponseEntity<?> filterByType(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "type") String type) throws Exception {
         Utils.checkToken(token);
         return ResponseEntity.ok(craftItemService.filterByType(type));
+    }
+
+    @RequestMapping(value = "/delete/{id}",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deleteItem(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "id") long id) throws Exception {
+        Utils.checkToken(token);
+        craftItemService.deleteItem(id);
+        return ResponseEntity.ok("Successfully deleted");
+    }
+
+    @RequestMapping(value = "/update",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateCraftItem(@RequestHeader(value = "Authorization") String token, @RequestBody ItemDTO dto) throws Exception {
+        Utils.checkToken(token);
+        craftItemService.updateItem(dto);
+        return ResponseEntity.ok("Successfuly updated.");
+    }
+
+    @RequestMapping(value = "/craftorders",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getCraftOrdersForCreator(@RequestHeader(value = "Authorization") String token) throws Exception {
+        Utils.checkToken(token);
+        return ResponseEntity.ok(craftItemService.getOrdersForCreator());
+    }
+
+    @RequestMapping(value = "/deliver/{id}",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> changeDeliveryStatus(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "id") long id) throws Exception {
+        Utils.checkToken(token);
+        craftItemService.changeItemDeliveryStatus(id);
+        return ResponseEntity.ok("DELEVERED");
     }
 }

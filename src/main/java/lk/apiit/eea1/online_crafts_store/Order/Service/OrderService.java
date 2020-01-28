@@ -6,6 +6,7 @@ import lk.apiit.eea1.online_crafts_store.Cart.Repository.CartRepository;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftItem;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Repository.CraftItemRepository;
 import lk.apiit.eea1.online_crafts_store.Order.DTO.OrderDTO;
+import lk.apiit.eea1.online_crafts_store.Order.DTO.UserOrdersDTO;
 import lk.apiit.eea1.online_crafts_store.Order.Entity.Order;
 import lk.apiit.eea1.online_crafts_store.Order.Entity.OrderCraftItem;
 import lk.apiit.eea1.online_crafts_store.Order.Repository.OrderCraftItemRepository;
@@ -16,6 +17,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -40,6 +45,9 @@ public class OrderService {
         order.setOrderTotal(calculateOrderTotalBeforeBuy(order));
         order.setOrderStatus("PURCHASED");
 
+        DateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
+        order.setPurchasedDate(formatter.format(new Date()));
+
         orderRepository.save(order);
 
     }
@@ -56,12 +64,16 @@ public class OrderService {
         order.setCart(cart); //to identify user if needed later
         order.setOrderTotal(craftItem.getCiPrice()*orderDTO.getQuantity());
 
+        DateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
+        order.setPurchasedDate(formatter.format(new Date()));
+
         orderRepository.save(order);
 
         OrderCraftItem orderCraftItem=new OrderCraftItem();
         orderCraftItem.setQuantity(orderDTO.getQuantity());
         orderCraftItem.setCraftItem(craftItem);
         orderCraftItem.setOrder(order);
+        orderCraftItem.setStatus("DELIVERY PENDING");
 
         orderCraftItemRepository.save(orderCraftItem);
 
@@ -170,6 +182,7 @@ public class OrderService {
             else if(craftItem.isAvailabilityStatus() && oci.getQuantity()>craftItem.getItemQuantity()){
                 tot+=craftItem.getCiPrice()*craftItem.getItemQuantity();
                 oci.setQuantity(craftItem.getItemQuantity());
+                oci.setStatus("DELIVERY PENDING");
                 orderCraftItemRepository.save(oci);
             }
 
@@ -200,10 +213,36 @@ public class OrderService {
             else if(oci.getCraftItem().isAvailabilityStatus() && oci.getQuantity()>oci.getCraftItem().getItemQuantity()){
                 tot+=oci.getCraftItem().getCiPrice()*oci.getCraftItem().getItemQuantity();
                 oci.setQuantity(oci.getCraftItem().getItemQuantity());
+                oci.setStatus("DELIVERY PENDING");
                 orderCraftItemRepository.save(oci);
             }
         }
 
         return tot;
+    }
+
+    public List<UserOrdersDTO> pastOrdersOfUser(){
+        List<UserOrdersDTO> userOrderList=new ArrayList<>();
+        UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Cart cart =cartRepository.getByUser_Id(userSession.getId());
+
+        List<Order> purchasedOrdersOfUser= orderRepository.getAllByCartAndOrderStatus(cart,"PURCHASED");
+        List<Order> deliveredOrdersOfUser= orderRepository.getAllByCartAndOrderStatus(cart,"DELIVERED");
+
+        List<Order> ordersOfUser=new ArrayList<>();
+        ordersOfUser.addAll(purchasedOrdersOfUser);
+        ordersOfUser.addAll(deliveredOrdersOfUser);
+
+        for (Order order:ordersOfUser) {
+            List<OrderCraftItem> orderCraftItem=orderCraftItemRepository.getAllByOrder(order);
+            UserOrdersDTO userOrdersDTO=new UserOrdersDTO();
+            userOrdersDTO.setOrderItemsList(orderCraftItem);
+            userOrdersDTO.setPurchaseDate(order.getPurchasedDate());
+            userOrdersDTO.setOrderTotal(order.getOrderTotal());
+            userOrdersDTO.setOrderStatus(order.getOrderStatus());
+            userOrderList.add(userOrdersDTO);
+        }
+
+        return userOrderList;
     }
 }
