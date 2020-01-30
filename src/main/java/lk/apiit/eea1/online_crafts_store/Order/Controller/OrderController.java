@@ -68,4 +68,15 @@ public class OrderController {
         return ResponseEntity.ok(orderService.pastOrdersOfUser());
     }
 
+    @RequestMapping(value = "/pastCraftItems",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> craftItemsForCustomerReview(@RequestHeader(value = "Authorization") String token) throws Exception {
+        Utils.checkToken(token);
+        return ResponseEntity.ok(orderService.getCraftsForCustomerReviews());
+    }
+
+    @RequestMapping(value = "/pastCraftCreators",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> creatorsForCustomerRating(@RequestHeader(value = "Authorization") String token) throws Exception {
+        Utils.checkToken(token);
+        return ResponseEntity.ok(orderService.getCreatorsForCustomerRating());
+    }
 }

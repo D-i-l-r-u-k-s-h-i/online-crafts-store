@@ -32,4 +32,6 @@ public class ItemDTO {
     private String type; //ready made or craft kit
 
     private CraftCreator creator;
+
+    private int noOfPages;
 }

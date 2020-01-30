@@ -19,4 +19,6 @@ public interface OrderCraftItemRepository extends JpaRepository<OrderCraftItem,L
     OrderCraftItem getByOrder_OrderStatusAndCraftItemAndStatus(String orderstatus,CraftItem craftItem,String itemstatus);
 
     OrderCraftItem getById(long id);
+
+    List<OrderCraftItem> getAllByOrderAndStatus(Order order,String status);
 }

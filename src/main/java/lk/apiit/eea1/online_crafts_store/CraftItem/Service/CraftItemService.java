@@ -16,6 +16,7 @@ import lk.apiit.eea1.online_crafts_store.Order.Repository.OrderCraftItemReposito
 import lk.apiit.eea1.online_crafts_store.Util.Utils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -143,24 +144,29 @@ public class CraftItemService {
         return dtoList;
     }
 
-    public List<ItemDTO> getAllItemsOfCraftCreator(long id,int page){ //id or userName?
+    public List<ItemDTO> getAllItemsOfCraftCreator(long id,int page){
         List<ItemDTO> dtoList=new ArrayList<>();
-        List<CraftCreatorCraftItem> creatorCraftItems;
+        Page<CraftCreatorCraftItem> creatorCraftItems;
+
+        int pages=0;
         //for craft creators dashboard
         if(id == 0){
             UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             CraftCreator craftCreator=craftCreatorRepository.findByUser_Id(userSession.getId());
 
-            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(craftCreator.getCreatorId(),PageRequest.of(page,12));
+            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(craftCreator.getCreatorId(),PageRequest.of(page,8));
+            pages=creatorCraftItems.getTotalPages();
         } //for other users
         else{
-            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(id,PageRequest.of(page,12));
+            creatorCraftItems=craftCreatorItemRepository.findAllByCraftCreator_CreatorId(id,PageRequest.of(page,8));
+            pages=creatorCraftItems.getTotalPages();
         }
 
         for (CraftCreatorCraftItem cci:creatorCraftItems) {
             ModelMapper mapper=new ModelMapper();
             ItemDTO itemDTO=mapper.map(cci.getCraftItem(),ItemDTO.class);
             itemDTO.setCreator(cci.getCraftCreator());
+            itemDTO.setNoOfPages(pages);
             dtoList.add(itemDTO);
         }
 

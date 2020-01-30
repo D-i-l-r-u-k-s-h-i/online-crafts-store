@@ -22,4 +22,6 @@ public class CraftCreator {
     @OneToOne
     @JoinColumn(name = "user_id",referencedColumnName = "id",nullable = false)
     private AllUsers user;
+
+    private double overallRating;
 }

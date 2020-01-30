@@ -9,4 +9,6 @@ public interface CraftCreatorRepository extends JpaRepository<CraftCreator,Long>
     CraftCreator findByCreatorEmail(String email);
 
     CraftCreator findByUser_Id(long id);
+
+    CraftCreator getByCreatorId(long id);
 }

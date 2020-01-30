@@ -1,5 +1,6 @@
 package lk.apiit.eea1.online_crafts_store.ReviewsAndRatings.Entity;
 
+import lk.apiit.eea1.online_crafts_store.Auth.Entity.AllUsers;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.Customer;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftItem;
 import lombok.Getter;
@@ -17,12 +18,14 @@ public class ReviewCraftItem {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "cust_id",nullable = false)
-    private Customer customer;
+    @JoinColumn(name = "user_id",referencedColumnName="id", nullable = false)
+    private AllUsers user;
 
     @ManyToOne
     @JoinColumn(name = "craft_id",nullable = false)
     private CraftItem craftItem;
 
     private String reviewDescription;
+
+    private String date;
 }

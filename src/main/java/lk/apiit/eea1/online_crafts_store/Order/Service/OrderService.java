@@ -1,9 +1,12 @@
 package lk.apiit.eea1.online_crafts_store.Order.Service;
 
+import lk.apiit.eea1.online_crafts_store.Auth.Entity.CraftCreator;
 import lk.apiit.eea1.online_crafts_store.Auth.UserSession;
 import lk.apiit.eea1.online_crafts_store.Cart.Entity.Cart;
 import lk.apiit.eea1.online_crafts_store.Cart.Repository.CartRepository;
+import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftCreatorCraftItem;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftItem;
+import lk.apiit.eea1.online_crafts_store.CraftItem.Repository.CraftCreatorItemRepository;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Repository.CraftItemRepository;
 import lk.apiit.eea1.online_crafts_store.Order.DTO.OrderDTO;
 import lk.apiit.eea1.online_crafts_store.Order.DTO.UserOrdersDTO;
@@ -22,6 +25,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class OrderService {
@@ -36,6 +42,9 @@ public class OrderService {
 
     @Autowired
     CartRepository cartRepository;
+
+    @Autowired
+    CraftCreatorItemRepository craftCreatorItemRepository;
 
     public void buyOrder(){
         UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -227,13 +236,8 @@ public class OrderService {
         Cart cart =cartRepository.getByUser_Id(userSession.getId());
 
         List<Order> purchasedOrdersOfUser= orderRepository.getAllByCartAndOrderStatus(cart,"PURCHASED");
-        List<Order> deliveredOrdersOfUser= orderRepository.getAllByCartAndOrderStatus(cart,"DELIVERED");
 
-        List<Order> ordersOfUser=new ArrayList<>();
-        ordersOfUser.addAll(purchasedOrdersOfUser);
-        ordersOfUser.addAll(deliveredOrdersOfUser);
-
-        for (Order order:ordersOfUser) {
+        for (Order order:purchasedOrdersOfUser) {
             List<OrderCraftItem> orderCraftItem=orderCraftItemRepository.getAllByOrder(order);
             UserOrdersDTO userOrdersDTO=new UserOrdersDTO();
             userOrdersDTO.setOrderItemsList(orderCraftItem);
@@ -244,5 +248,48 @@ public class OrderService {
         }
 
         return userOrderList;
+    }
+
+    public List<CraftItem> getCraftsForCustomerReviews(){
+        UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Cart cart =cartRepository.getByUser_Id(userSession.getId());
+
+        List<Order> purchasedOrdersOfUser= orderRepository.getAllByCartAndOrderStatus(cart,"PURCHASED");
+
+        List<CraftItem> craftItemList=new ArrayList<>();
+        
+        for (Order order:purchasedOrdersOfUser) {
+            List<OrderCraftItem> orderCraftItem=orderCraftItemRepository.getAllByOrderAndStatus(order,"DELIVERED");
+            //distinct ones
+            List<CraftItem> craftItems = orderCraftItem.stream().map(OrderCraftItem::getCraftItem).collect(toList());
+            craftItemList.addAll(craftItems);
+        }
+
+        return craftItemList.stream().distinct().collect(toList());
+    }
+
+    public List<CraftCreator> getCreatorsForCustomerRating(){
+        UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Cart cart =cartRepository.getByUser_Id(userSession.getId());
+
+        List<Order> purchasedOrdersOfUser= orderRepository.getAllByCartAndOrderStatus(cart,"PURCHASED");
+
+        List<CraftCreator> creatorList=new ArrayList<>();
+
+        for (Order order:purchasedOrdersOfUser) {
+            List<OrderCraftItem> orderCraftItem=orderCraftItemRepository.getAllByOrderAndStatus(order,"DELIVERED");
+            //distinct ones
+            List<CraftItem> craftItems = orderCraftItem.stream().map(OrderCraftItem::getCraftItem).collect(toList());
+
+            for (CraftItem ci:craftItems) {
+                CraftCreatorCraftItem creatorCraft=craftCreatorItemRepository.getByCraftItem(ci);
+                creatorList.add(creatorCraft.getCraftCreator());
+            }
+
+        }
+
+        //distinct creators
+        return creatorList.stream().distinct().collect(toList());
+
     }
 }
