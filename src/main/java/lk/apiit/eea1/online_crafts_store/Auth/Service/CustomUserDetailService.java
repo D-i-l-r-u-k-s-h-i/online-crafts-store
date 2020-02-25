@@ -1,5 +1,7 @@
 package lk.apiit.eea1.online_crafts_store.Auth.Service;
 
+import lk.apiit.eea1.online_crafts_store.Auth.DTO.AdminDTO;
+import lk.apiit.eea1.online_crafts_store.Auth.DTO.CreatorDTO;
 import lk.apiit.eea1.online_crafts_store.Auth.DTO.UserDTO;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.*;
 import lk.apiit.eea1.online_crafts_store.Auth.Repository.AdminRepository;
@@ -9,7 +11,10 @@ import lk.apiit.eea1.online_crafts_store.Auth.Repository.UserRepository;
 import lk.apiit.eea1.online_crafts_store.Auth.UserSession;
 import lk.apiit.eea1.online_crafts_store.Cart.Entity.Cart;
 import lk.apiit.eea1.online_crafts_store.Cart.Repository.CartRepository;
+import lk.apiit.eea1.online_crafts_store.Util.Utils;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,6 +22,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -152,38 +158,57 @@ public class CustomUserDetailService implements UserDetailsService {
         return response;
     }
 
-//    @Transactional
-//    public String saveAdmin(AdminDTO adminDTO){
-//        String ret="";
-//
-//        AllUsers user=userRepository.findByUsername(adminDTO.getUsername());
-//
-//        if(user!=null){
-//            ret = "Sorry this name is taken";
-//        }
-//        else{
-//            UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//
-//            if(bCryptPasswordEncoder.matches(adminDTO.getCurrentAdminPass(),userSession.getPassword()) && userSession.getRole().getRoleId()==1){
-//                String pwd = bCryptPasswordEncoder.encode(adminDTO.getPassword());
-//
+    @Transactional
+    public String saveAdmin(AdminDTO adminDTO){
+        String ret="";
+
+        AllUsers user=userRepository.findByUsername(adminDTO.getUsername());
+
+        if(user!=null){
+            ret = "Sorry this name is taken";
+        }
+        else{
+            UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+            if(bCryptPasswordEncoder.matches(adminDTO.getCurrentAdminPass(),userSession.getPassword()) && userSession.getRole().getRoleId()==1){
+                if(adminDTO.getPassword().equals(adminDTO.getConfirmPassword())){
+                    String pwd = bCryptPasswordEncoder.encode(adminDTO.getPassword());
+
+                    AllUsers newuser=new AllUsers();
+                    newuser.setUsername(adminDTO.getUsername());
+                    newuser.setPassword(pwd);
+                    newuser.setRole(new Role(1,RoleName.ROLE_ADMIN));
+
 //                ModelMapper modelMapper= new ModelMapper();
-//                Admin admin=modelMapper.map(adminDTO,Admin.class);
-//                AllUsers newuser=modelMapper.map(adminDTO,AllUsers.class);
-//                newuser.setPassword(pwd);
-//                newuser.setRole(new Role(1,RoleName.ROLE_ADMIN));
-////                admin.setRole(new Role(1,RoleName.ROLE_ADMIN));
-//
-//                adminRepository.save(admin);
-//                userRepository.save(newuser);
-//
-//                ret="Successful Registration";
-//            }
-//            else {
-//                ret="Sorry, incorrect password";
-//            }
-//
-//        }
-//        return ret;
-//    }
+                    Admin admin=new Admin();
+                    admin.setUsername(adminDTO.getUsername());
+                    admin.setEmail(adminDTO.getEmail());
+                    admin.setUser(newuser);
+
+                    userRepository.save(newuser);
+                    adminRepository.save(admin);
+
+                    Cart cart=new Cart();
+                    cart.setUser(newuser);
+                    cartRepository.save(cart);
+
+                    ret="Successful Registration";
+                }
+                else{
+                    ret="Wrong Confirm Password";
+                }
+            }
+            else {
+                ret="Sorry, incorrect password";
+            }
+
+        }
+        return ret;
+    }
+
+    public List<CreatorDTO> searchCreator(String name){
+        List<CraftCreator> creators=craftCreatorRepository.searchCreator(name);
+
+        return Utils.mapAll(creators,CreatorDTO.class);
+    }
 }

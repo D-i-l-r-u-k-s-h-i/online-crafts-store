@@ -20,11 +20,10 @@ public class CraftItem {
 
     private double ciPrice;
 
-//    @Lob
-//    private byte[] img;
+    private byte[] imgFile;
 
     //for now using URL
-    private String img;
+//    private String img;
 
     private int itemQuantity;
 

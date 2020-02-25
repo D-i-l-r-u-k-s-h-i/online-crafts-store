@@ -1,5 +1,6 @@
 package lk.apiit.eea1.online_crafts_store.CraftItem.Controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lk.apiit.eea1.online_crafts_store.CraftItem.DTO.ItemDTO;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Service.CraftItemService;
 import lk.apiit.eea1.online_crafts_store.Util.Utils;
@@ -22,11 +23,26 @@ public class CraftItemController {
         return ResponseEntity.ok(craftItemService.getAllItems());
     }
 
-    @RequestMapping(value = "/add",method = RequestMethod.POST, consumes = { MediaType.APPLICATION_JSON_VALUE,
-            MediaType.MULTIPART_FORM_DATA_VALUE }, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> addCraftItem(@RequestHeader(value = "Authorization") String token, @RequestBody ItemDTO dto, @PathVariable MultipartFile file) throws Exception {
+    @RequestMapping(value = "/add",method = RequestMethod.POST,consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> addCraftItem(@RequestHeader(value = "Authorization") String token, @RequestParam("imgFile") MultipartFile imgFile,
+                                          @RequestParam("ciName")String ciName,@RequestParam("ciPrice") double ciPrice,@RequestParam("itemQuantity")int itemQuantity,
+                                          @RequestParam("shortDescription") String shortDescription,@RequestParam("longDescription") String longDescription,
+                                          @RequestParam("type") String type,@RequestParam("category") String category) throws Exception {
         Utils.checkToken(token);
-        return ResponseEntity.ok(craftItemService.addItem(dto));
+
+        ItemDTO dto=new ItemDTO();
+        dto.setCiName(ciName);
+        dto.setCiPrice(ciPrice);
+        dto.setCategory(category);
+        dto.setItemQuantity(itemQuantity);
+        dto.setLongDescription(longDescription);
+        dto.setShortDescription(shortDescription);
+        dto.setType(type);
+
+        System.out.println(imgFile.getContentType());
+        System.out.println(imgFile.getOriginalFilename());
+
+        return ResponseEntity.ok(craftItemService.addItem(dto,imgFile));
     }
 
     @RequestMapping(value = "/mostrecent",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -66,9 +82,25 @@ public class CraftItemController {
         return ResponseEntity.ok("Successfully deleted");
     }
 
-    @RequestMapping(value = "/update",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateCraftItem(@RequestHeader(value = "Authorization") String token, @RequestBody ItemDTO dto) throws Exception {
+    @RequestMapping(value = "/update",method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> updateCraftItem(@RequestHeader(value = "Authorization") String token, @RequestParam(value = "imgFile",required = false) MultipartFile imgFile,@RequestParam(value="craftId") Long craftId,
+                                             @RequestParam(value ="ciName",required = false)String ciName,@RequestParam(value ="ciPrice",required = false) Double ciPrice,@RequestParam(value ="itemQuantity",required = false)Integer itemQuantity,
+                                             @RequestParam(value ="shortDescription",required = false) String shortDescription,@RequestParam(value ="longDescription",required = false) String longDescription,
+                                             @RequestParam(value ="type",required = false) String type,@RequestParam(value ="category",required = false) String category,@RequestParam(value ="availabilityStatus",required = false) Boolean availabilityStatus) throws Exception {
         Utils.checkToken(token);
+
+        ItemDTO dto=new ItemDTO();
+        dto.setCraftId(craftId);
+        dto.setCiName(ciName);
+        dto.setCiPrice(ciPrice == null ?0.0:ciPrice);
+        dto.setCategory(category);
+        dto.setItemQuantity(itemQuantity== null ?0:itemQuantity);
+        dto.setLongDescription(longDescription);
+        dto.setShortDescription(shortDescription);
+        dto.setType(type);
+        dto.setImgFile(imgFile==null?null:imgFile.getBytes());
+        dto.setAvailabilityStatus(availabilityStatus== null ?true:availabilityStatus);
+
         craftItemService.updateItem(dto);
         return ResponseEntity.ok("Successfuly updated.");
     }

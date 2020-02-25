@@ -1,5 +1,6 @@
 package lk.apiit.eea1.online_crafts_store.CraftItem.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.CraftCreator;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.RoleName;
 import lk.apiit.eea1.online_crafts_store.Auth.Repository.CraftCreatorRepository;
@@ -11,6 +12,8 @@ import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftCreatorCraftItem;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftItem;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Repository.CraftCreatorItemRepository;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Repository.CraftItemRepository;
+import lk.apiit.eea1.online_crafts_store.Notifications.Entity.Notifications;
+import lk.apiit.eea1.online_crafts_store.Notifications.Repository.NotificationsRepository;
 import lk.apiit.eea1.online_crafts_store.Order.Entity.OrderCraftItem;
 import lk.apiit.eea1.online_crafts_store.Order.Repository.OrderCraftItemRepository;
 import lk.apiit.eea1.online_crafts_store.Util.Utils;
@@ -21,9 +24,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -41,9 +47,12 @@ public class CraftItemService {
     @Autowired
     OrderCraftItemRepository orderCraftItemRepository;
 
+    @Autowired
+    NotificationsRepository notificationsRepository;
+
     //only for admins and craft creators
     @Transactional    //because craft item and images should be saved at the same time, rollback if there is any problem
-    public String addItem(ItemDTO dto) throws IOException {
+    public String addItem(ItemDTO dto,MultipartFile imgFile) throws IOException {
         UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         //do the role based access to this api if only needed
         String ret="";
@@ -58,7 +67,9 @@ public class CraftItemService {
             craftCreatorCraftItem.setCraftCreator(craftCreator);
             craftCreatorCraftItem.setCraftItem(craftItem);
 
-//            craftItem.setImg(dto.getImgFile().getBytes());
+//            System.out.println(dto.getImgFile().getName()+dto.getImgFile().getContentType());
+            craftItem.setImgFile(imgFile.getBytes());
+
             //save images in another table since there are many for one craft item
 
             craftItemRepository.save(craftItem);
@@ -71,9 +82,21 @@ public class CraftItemService {
     }
 
     public void deleteItem(long id){
+        UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         CraftItem craftItem=craftItemRepository.findByCraftId(id);
 
-        CraftCreatorCraftItem craftCreatorCraftItem=craftCreatorItemRepository.findByCraftItem_CraftId(id);
+        CraftCreatorCraftItem craftCreatorCraftItem=craftCreatorItemRepository.getByCraftItem(craftItem);
+
+        //if Admin, notify craft creator
+        if(userSession.getRole().getRoleId()==1){
+            Notifications notifications=new Notifications();
+            notifications.setNotification("The Craft Item "+craftItem.getCiName()+" was deleted by admin");
+            notifications.setUsers(craftCreatorCraftItem.getCraftCreator().getUser());
+            SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
+            notifications.setDatetime(formatter.format(new Date()));
+            notificationsRepository.save(notifications);
+        }
 
         craftCreatorItemRepository.delete(craftCreatorCraftItem);
         craftItemRepository.delete(craftItem);
@@ -81,37 +104,68 @@ public class CraftItemService {
 
     //only for admins and craft creators
     public void updateItem(ItemDTO itemDTO){
+        UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         //try model mapper and test it first or do the other way
         CraftItem craftItem=craftItemRepository.findByCraftId(itemDTO.getCraftId());
+        CraftCreatorCraftItem craftCreatorCraftItem=craftCreatorItemRepository.getByCraftItem(craftItem);
 
-        if(itemDTO.getCategory()!=null){
+        List<String> editedParams=new ArrayList<>();
+
+        if(!itemDTO.getCategory().equals(craftItem.getCategory())){
             craftItem.setCategory(itemDTO.getCategory());
+            editedParams.add("Craft Category to "+itemDTO.getCategory());
         }
 
         if(itemDTO.getCiName()!=null){
             craftItem.setCiName(itemDTO.getCiName());
+            editedParams.add("Craft Name to "+itemDTO.getCiName());
         }
 
         if(itemDTO.getCiPrice()!=0){
             craftItem.setCiPrice(itemDTO.getCiPrice());
+            editedParams.add("Craft Price to "+itemDTO.getCiPrice());
         }
 
         if(itemDTO.getItemQuantity()!=0){
             craftItem.setItemQuantity(itemDTO.getItemQuantity());
+            editedParams.add("Craft ItemQuantity to "+itemDTO.getItemQuantity());
         }
 
         if(itemDTO.getLongDescription()!=null){
             craftItem.setLongDescription(itemDTO.getLongDescription());
+            editedParams.add("Long Description to"+itemDTO.getLongDescription());
         }
 
         if(itemDTO.getShortDescription()!=null){
             craftItem.setShortDescription(itemDTO.getShortDescription());
+            editedParams.add("Short Description to "+itemDTO.getShortDescription());
         }
 
-        if(itemDTO.getImg()!=null){
-            craftItem.setImg(itemDTO.getImg());
+        if(itemDTO.getImgFile()!=null){
+            craftItem.setImgFile(itemDTO.getImgFile());
+            editedParams.add("Craft Image");
         }
-            //if availabilityStatus is false, then set the quantity to 0
+        //if availabilityStatus is false, then set the quantity to 0
+        if(itemDTO.isAvailabilityStatus()==false){
+            craftItem.setItemQuantity(0);
+            craftItem.setAvailabilityStatus(false);
+
+            editedParams.add("Craft status to unavailable");
+        }
+
+        //if Admin, notify craft creator
+        if(userSession.getRole().getRoleId()==1){
+            Notifications notifications=new Notifications();
+            String editedListString=String.join(",",editedParams);
+            notifications.setNotification("The Craft Item "+editedListString+" was edited by admin");
+            notifications.setUsers(craftCreatorCraftItem.getCraftCreator().getUser());
+
+            SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
+            notifications.setDatetime(formatter.format(new Date()));
+
+            notificationsRepository.save(notifications);
+        }
+
         craftItemRepository.save(craftItem);
     }
 

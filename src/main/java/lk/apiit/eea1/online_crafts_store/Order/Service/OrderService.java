@@ -54,11 +54,17 @@ public class OrderService {
         order.setOrderTotal(calculateOrderTotalBeforeBuy(order));
         order.setOrderStatus("PURCHASED");
 
+
         DateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
         order.setPurchasedDate(formatter.format(new Date()));
 
         orderRepository.save(order);
 
+        List<OrderCraftItem> orderCraftItemList=orderCraftItemRepository.getAllByOrder(order);
+        orderCraftItemList.stream().forEach(orderCraftItem->{
+            orderCraftItem.setStatus("DELIVERY PENDING");
+            orderCraftItemRepository.save(orderCraftItem);
+        });
     }
 
     @Transactional

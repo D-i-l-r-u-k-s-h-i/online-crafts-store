@@ -1,14 +1,19 @@
 package lk.apiit.eea1.online_crafts_store.CraftItem.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lk.apiit.eea1.online_crafts_store.Auth.Entity.CraftCreator;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.Lob;
+import java.io.Serializable;
+
 @Getter
 @Setter
-public class ItemDTO {
+public class ItemDTO implements Serializable {
     private long craftId;
 
     private String ciName;
@@ -17,9 +22,9 @@ public class ItemDTO {
 
     private double ciPrice;
 
-//    @JsonDeserialize(as = MultipartFile.class)
-//    private MultipartFile imgFile;
-    private String img;
+    private byte[] imgFile;
+
+//    private String img;
 
     private int itemQuantity;
 
