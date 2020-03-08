@@ -28,4 +28,10 @@ public class AdminController {
         return ResponseEntity.ok(customUserDetailService.searchCreator(name));
     }
 
+    @RequestMapping(value = "/newusers",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getNewUsers(@RequestHeader(value = "Authorization") String token) throws Exception {
+        Utils.checkToken(token);
+        return ResponseEntity.ok(customUserDetailService.getNewUsers());
+    }
+
 }

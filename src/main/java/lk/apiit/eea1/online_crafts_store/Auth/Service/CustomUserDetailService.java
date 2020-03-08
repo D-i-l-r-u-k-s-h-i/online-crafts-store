@@ -14,6 +14,7 @@ import lk.apiit.eea1.online_crafts_store.Cart.Repository.CartRepository;
 import lk.apiit.eea1.online_crafts_store.Util.Utils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,6 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -210,5 +212,19 @@ public class CustomUserDetailService implements UserDetailsService {
         List<CraftCreator> creators=craftCreatorRepository.searchCreator(name);
 
         return Utils.mapAll(creators,CreatorDTO.class);
+    }
+
+    public List<UserDTO> getNewUsers(){ //15 new users
+        int n=1;
+        List<UserDTO> dtoList=new ArrayList<>();
+        List<AllUsers> newUsers = userRepository.getNewlyRegisteredUsers(PageRequest.of(0,15));
+        for (AllUsers u:newUsers) {
+            UserDTO dto=new UserDTO();
+            dto.setUserName(u.getUsername());
+            dto.setUserType(u.getRole().getRoleName().toString());
+            dto.setIndex(n++);
+            dtoList.add(dto);
+        }
+        return dtoList;
     }
 }

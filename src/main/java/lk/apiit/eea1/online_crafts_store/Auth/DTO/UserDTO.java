@@ -19,4 +19,6 @@ public class UserDTO {
     private long roleId;
 
     private String userType;
+
+    private int index;
 }
