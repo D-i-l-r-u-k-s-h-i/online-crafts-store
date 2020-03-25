@@ -9,6 +9,6 @@ public class RatingsDTO {
 
     private long creatorId;
 
-    private int rating;
+    private float rating;
 
 }

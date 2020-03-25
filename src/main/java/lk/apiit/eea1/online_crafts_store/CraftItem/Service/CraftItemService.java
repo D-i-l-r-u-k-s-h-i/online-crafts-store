@@ -74,6 +74,7 @@ public class CraftItemService {
 
             craftItemRepository.save(craftItem);
             craftCreatorItemRepository.save(craftCreatorCraftItem);
+            ret="craft item was successfully added to your collection.";
         }
         else{ //customers are not authorized to add craft items
             ret="You are not authorized to perform this action";
@@ -87,6 +88,8 @@ public class CraftItemService {
         CraftItem craftItem=craftItemRepository.findByCraftId(id);
 
         CraftCreatorCraftItem craftCreatorCraftItem=craftCreatorItemRepository.getByCraftItem(craftItem);
+
+        //check for past orders by users- then the craft can only be changed to unavailable. cannot delete
 
         //if Admin, notify craft creator
         if(userSession.getRole().getRoleId()==1){

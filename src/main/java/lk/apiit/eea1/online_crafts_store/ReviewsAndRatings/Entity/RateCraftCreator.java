@@ -25,5 +25,5 @@ public class RateCraftCreator {
     @JoinColumn(name = "creator_id",nullable = false)
     private CraftCreator craftCreator;
 
-    private int rating;
+    private float rating;
 }

@@ -28,7 +28,7 @@ public class RatingsAndReviewsController {
     public ResponseEntity<?> addReview(@RequestHeader(value = "Authorization") String token, @RequestBody ReviewDTO dto) throws Exception {
         Utils.checkToken(token);
         ratingsAndReviewService.addReview(dto);
-        return ResponseEntity.ok("Rating Successfuly added.");
+        return ResponseEntity.ok("Review Successfuly added.");
     }
 
     @RequestMapping(value = "/craftreview/{id}",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)

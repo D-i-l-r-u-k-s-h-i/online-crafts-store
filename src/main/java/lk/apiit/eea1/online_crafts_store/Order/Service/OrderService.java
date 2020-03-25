@@ -72,7 +72,8 @@ public class OrderService {
         UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Cart cart =cartRepository.getByUser_Id(userSession.getId());
 
-        CraftItem craftItem=orderDTO.getCraftItem();
+//        CraftItem craftItem=orderDTO.getCraftItem();
+        CraftItem craftItem=craftItemRepository.findByCraftId(orderDTO.getCraftId());
 
         Order order=new Order();
         order.setOrderStatus("PURCHASED");

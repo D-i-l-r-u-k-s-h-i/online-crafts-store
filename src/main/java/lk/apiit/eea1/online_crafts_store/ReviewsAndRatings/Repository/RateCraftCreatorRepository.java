@@ -14,5 +14,5 @@ public interface RateCraftCreatorRepository extends JpaRepository<RateCraftCreat
 
     int countAllByCraftCreator(CraftCreator craftCreator);
 
-    int countAllByRatingAndCraftCreator(int rating,CraftCreator craftCreator);
+    int countAllByRatingAndCraftCreator(float rating,CraftCreator craftCreator);
 }
