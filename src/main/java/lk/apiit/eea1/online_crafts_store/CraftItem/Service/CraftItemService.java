@@ -6,6 +6,7 @@ import lk.apiit.eea1.online_crafts_store.Auth.Entity.RoleName;
 import lk.apiit.eea1.online_crafts_store.Auth.Repository.CraftCreatorRepository;
 import lk.apiit.eea1.online_crafts_store.Auth.UserSession;
 import lk.apiit.eea1.online_crafts_store.Cart.Entity.Cart;
+import lk.apiit.eea1.online_crafts_store.CraftItem.DTO.AlertMessageDTO;
 import lk.apiit.eea1.online_crafts_store.CraftItem.DTO.CreatorCraftOrderDTO;
 import lk.apiit.eea1.online_crafts_store.CraftItem.DTO.ItemDTO;
 import lk.apiit.eea1.online_crafts_store.CraftItem.Entity.CraftCreatorCraftItem;
@@ -82,7 +83,9 @@ public class CraftItemService {
         return ret;
     }
 
-    public void deleteItem(long id){
+    @Transactional
+    public AlertMessageDTO deleteItem(long id){
+        AlertMessageDTO alertMessageDTO=new AlertMessageDTO();
         UserSession userSession = (UserSession) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         CraftItem craftItem=craftItemRepository.findByCraftId(id);
@@ -90,19 +93,30 @@ public class CraftItemService {
         CraftCreatorCraftItem craftCreatorCraftItem=craftCreatorItemRepository.getByCraftItem(craftItem);
 
         //check for past orders by users- then the craft can only be changed to unavailable. cannot delete
+        boolean isordersEist=orderCraftItemRepository.existsByCraftItem(craftItem);
 
-        //if Admin, notify craft creator
-        if(userSession.getRole().getRoleId()==1){
-            Notifications notifications=new Notifications();
-            notifications.setNotification("The Craft Item "+craftItem.getCiName()+" was deleted by admin");
-            notifications.setUsers(craftCreatorCraftItem.getCraftCreator().getUser());
-            SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
-            notifications.setDatetime(formatter.format(new Date()));
-            notificationsRepository.save(notifications);
+        if(isordersEist){
+            alertMessageDTO.setMessage("Due to existing Orders, this item cannot be removed.");
+            alertMessageDTO.setStatus("CANNOT_DELETE");
         }
+        else {
+            //if Admin, notify craft creator
+            if (userSession.getRole().getRoleId() == 1) {
+                Notifications notifications = new Notifications();
+                notifications.setNotification("The Craft Item " + craftItem.getCiName() + " was deleted by admin");
+                notifications.setUsers(craftCreatorCraftItem.getCraftCreator().getUser());
+                SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
+                notifications.setDatetime(formatter.format(new Date()));
+                notificationsRepository.save(notifications);
+            }
 
-        craftCreatorItemRepository.delete(craftCreatorCraftItem);
-        craftItemRepository.delete(craftItem);
+            craftCreatorItemRepository.delete(craftCreatorCraftItem);
+            craftItemRepository.delete(craftItem);
+
+            alertMessageDTO.setStatus("DELETE");
+            alertMessageDTO.setMessage("Successfully Deleted");
+        }
+        return alertMessageDTO;
     }
 
     //only for admins and craft creators

@@ -78,8 +78,8 @@ public class CraftItemController {
     @RequestMapping(value = "/delete/{id}",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> deleteItem(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "id") long id) throws Exception {
         Utils.checkToken(token);
-        craftItemService.deleteItem(id);
-        return ResponseEntity.ok("Successfully deleted");
+
+        return ResponseEntity.ok(craftItemService.deleteItem(id));
     }
 
     @RequestMapping(value = "/update",method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_JSON_VALUE})
