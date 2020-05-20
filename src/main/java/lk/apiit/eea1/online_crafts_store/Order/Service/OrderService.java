@@ -73,7 +73,7 @@ public class OrderService {
         Cart cart =cartRepository.getByUser_Id(userSession.getId());
 
 //        CraftItem craftItem=orderDTO.getCraftItem();
-        CraftItem craftItem=craftItemRepository.findByCraftId(orderDTO.getCraftId());
+        CraftItem craftItem=craftItemRepository.findByCraftId(orderDTO.getCraftItem().getCraftId());
 
         Order order=new Order();
         order.setOrderStatus("PURCHASED");

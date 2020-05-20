@@ -252,18 +252,18 @@ public class CraftItemService {
         List<CraftCreatorCraftItem> creatorCraftItems=craftCreatorItemRepository.getAllByCraftCreator(craftCreator);
 
         for (CraftCreatorCraftItem ccci:creatorCraftItems) {
-            OrderCraftItem orderCraftItem=orderCraftItemRepository.getByOrder_OrderStatusAndCraftItemAndStatus("PURCHASED",ccci.getCraftItem(),"DELIVERY PENDING");
+            List<OrderCraftItem> orderCraftItems=orderCraftItemRepository.getByOrder_OrderStatusAndCraftItemAndStatus("PURCHASED",ccci.getCraftItem(),"DELIVERY PENDING");
 
-            if(orderCraftItem!=null){
-                Cart cart=orderCraftItem.getOrder().getCart();
+            for(OrderCraftItem oci:orderCraftItems){
+                Cart cart=oci.getOrder().getCart();
 
                 CreatorCraftOrderDTO dto=new CreatorCraftOrderDTO();
-                dto.setOrderCraftItemId(orderCraftItem.getId());
+                dto.setOrderCraftItemId(oci.getId());
                 dto.setCraftName(ccci.getCraftItem().getCiName());
-                dto.setQuantity(orderCraftItem.getQuantity());
-                dto.setOrderTotal(orderCraftItem.getOrder().getOrderTotal());
+                dto.setQuantity(oci.getQuantity());
+                dto.setOrderTotal(oci.getOrder().getOrderTotal());
                 dto.setUsername(cart.getUser().getUsername());
-                dto.setPurchaseDate(orderCraftItem.getOrder().getPurchasedDate());
+                dto.setPurchaseDate(oci.getOrder().getPurchasedDate());
 
                 craftOrderDTOList.add((dto));
             }

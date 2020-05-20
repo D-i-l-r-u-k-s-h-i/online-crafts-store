@@ -18,8 +18,8 @@ public class CraftItemController {
     CraftItemService craftItemService;
 
     @RequestMapping(value = "/getall",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllCraftItems(@RequestHeader(value = "Authorization") String token) throws Exception {
-        Utils.checkToken(token);
+    public ResponseEntity<?> getAllCraftItems() throws Exception {
+//        Utils.checkToken(token);
         return ResponseEntity.ok(craftItemService.getAllItems());
     }
 
@@ -46,8 +46,8 @@ public class CraftItemController {
     }
 
     @RequestMapping(value = "/mostrecent",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getRecentlyAddedCraftItems(@RequestHeader(value = "Authorization") String token) throws Exception {
-        Utils.checkToken(token);
+    public ResponseEntity<?> getRecentlyAddedCraftItems() throws Exception {
+//        Utils.checkToken(token);
         return ResponseEntity.ok(craftItemService.getRecentlyAddedItems());
     }
 
@@ -58,14 +58,14 @@ public class CraftItemController {
     }
 
     @RequestMapping(value = "/search/{value}",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> searchCraftItems(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "value") String value) throws Exception {
-        Utils.checkToken(token);
+    public ResponseEntity<?> searchCraftItems(@PathVariable(name = "value") String value) throws Exception {
+//        Utils.checkToken(token);
         return ResponseEntity.ok(craftItemService.searchCrafts(value));
     }
 
     @RequestMapping(value = "/filtercategory/{category}",method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> filterByCategory(@RequestHeader(value = "Authorization") String token,@PathVariable(name = "category") String category) throws Exception {
-        Utils.checkToken(token);
+    public ResponseEntity<?> filterByCategory(@PathVariable(name = "category") String category) throws Exception {
+//        Utils.checkToken(token);
         return ResponseEntity.ok(craftItemService.filterByCatregory(category));
     }
 
