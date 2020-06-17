@@ -128,7 +128,7 @@ public class CraftItemService {
 
         List<String> editedParams=new ArrayList<>();
 
-        if(!itemDTO.getCategory().equals(craftItem.getCategory())){
+        if(itemDTO.getCategory()!=null && !itemDTO.getCategory().equals(craftItem.getCategory())){
             craftItem.setCategory(itemDTO.getCategory());
             editedParams.add("Craft Category to "+itemDTO.getCategory());
         }

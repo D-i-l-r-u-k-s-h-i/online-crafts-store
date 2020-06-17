@@ -123,7 +123,7 @@ public class CustomUserDetailService implements UserDetailsService {
                     cartRepository.save(cart);
                 }
 
-                ret="Successful registration";
+                ret="Successful registration, login again to confirm user";
             }
             else {
                 ret="Passwords doesn't match";
